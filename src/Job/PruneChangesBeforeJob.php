@@ -2,7 +2,9 @@
 
 namespace Symbiote\DataChange\Job;
 
+use SilverStripe\ORM\FieldType\DBDate;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
@@ -19,9 +21,13 @@ if (!class_exists(AbstractQueuedJob::class)) {
  */
 class PruneChangesBeforeJob extends AbstractQueuedJob
 {
+    use Configurable;
+
     protected ?DBDatetime $pruneBefore = null;
 
     protected string $priorTo = '-3 months';
+
+    private static string $repeat_at_time = "03:00:00";
 
     public function __construct(string $priorTo = '-3 months', protected int $repeatAfter = 86400)
     {
@@ -58,9 +64,13 @@ class PruneChangesBeforeJob extends AbstractQueuedJob
             $job = new PruneChangesBeforeJob($this->priorTo, $this->repeatAfter);
             $next = DBDatetime::now();
             $next = $next->Modify("+{$this->repeatAfter} seconds");
+            $repeatTime = static::config()->get('repeat_at_time');
+            if($repeatTime == '') {
+                $repeatTime = "03:00:00";
+            }
             Injector::inst()->get(QueuedJobService::class)->queueJob(
                 $job,
-                $next->Format(DBDatetime::ISO_DATETIME)
+                $next->Format(DBDate::ISO_DATE . " " . $repeatTime)
             );
         }
     }
