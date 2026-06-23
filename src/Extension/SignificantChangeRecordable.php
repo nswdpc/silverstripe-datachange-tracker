@@ -16,15 +16,18 @@ use SilverStripe\Core\Config\Config;
  *
  * @author  stephen@symbiote.com.au
  * @license BSD License http://silverstripe.org/bsd-license/
+ * @property ?string $LastSignificantChange
+ * @property ?string $ChangeDescription
+ * @extends \SilverStripe\Core\Extension<static>
  */
 class SignificantChangeRecordable extends Extension
 {
 
-    private static $ignored_fields = [];
+    private static array $ignored_fields = [];
 
-    private static $significant_fields = [];
+    private static array $significant_fields = [];
 
-    private static $db = [
+    private static array $db = [
         'LastSignificantChange' => 'DBDatetime',
         'ChangeDescription' => 'Text'
     ];
@@ -33,8 +36,8 @@ class SignificantChangeRecordable extends Extension
     {
         $fields->removeByName('LastSignificantChange');
         $fields->removeByName('ChangeDescription');
-        if ($this->owner->LastSignificantChange !== null) {
-            $dateTime = $this->owner->dbObject('LastSignificantChange');
+        if ($this->getOwner()->LastSignificantChange !== null) {
+            $dateTime = $this->getOwner()->dbObject('LastSignificantChange');
             //Put these fields on the top of the First Tab's form
             $fields->addFieldsToTab(
                 'Root.SignificantChanges',
@@ -63,30 +66,28 @@ class SignificantChangeRecordable extends Extension
     public function onBeforeWrite()
     {
         // Load the significant_fields and check to see if they have changed if they have record the current DateTime
-        $significant = Config::inst()->get($this->owner->Classname, 'significant_fields');
-        $isSignificantChange = $this->owner->ClearSignificantChange;
+        $significant = Config::inst()->get($this->getOwner()->Classname, 'significant_fields');
+        $isSignificantChange = $this->getOwner()->ClearSignificantChange;
 
         if (isset($significant) && !$isSignificantChange) {
             $significant = array_combine($significant, $significant);
-
             //If the owner object or an extension of it implements getSignificantChange call it instead of testing here
-            if ($this->owner->hasMethod('getSignificantChange') && $this->owner->getSignificantChange()) {
+            if ($this->getOwner()->hasMethod('getSignificantChange') && $this->getOwner()->getSignificantChange()) {
                 //Set LastSignificantChange to now
-                $this->owner->LastSignificantChange = date(DateTime::ATOM);
+                $this->getOwner()->LastSignificantChange = date(DateTime::ATOM);
             } else {
-                $changes = $this->owner->getChangedFields(true, 2);
+                $changes = $this->getOwner()->getChangedFields(true, 2);
                 //A simple interesect of the keys gives us whether a change has occurred
                 if (count($changes) && count(array_intersect_key($changes, $significant))) {
                     //Set LastSignificantChange to now
-                    $this->owner->LastSignificantChange = date(DateTime::ATOM);
+                    $this->getOwner()->LastSignificantChange = date(DateTime::ATOM);
                 }
             }
+            
             //If we don't have any significant changes leave the field alone as a previous edit may have been
             //significant.
-        } else {
-            if ($this->owner->isInDB()) {
-                $this->owner->LastSignificantChange = null;
-            }
+        } elseif ($this->getOwner()->isInDB()) {
+            $this->getOwner()->LastSignificantChange = null;
         }
     }
 }

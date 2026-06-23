@@ -19,21 +19,21 @@ class SiteTreeChangeRecordable extends ChangeRecordable
 
     public function onAfterPublish(&$original)
     {
-        $this->dataChangeTrackService->track($this->owner, 'Publish');
+        $this->dataChangeTrackService->track($this->getOwner(), 'Publish');
     }
 
     public function onAfterUnpublish()
     {
-        $this->dataChangeTrackService->track($this->owner, 'Unpublish');
+        $this->dataChangeTrackService->track($this->getOwner(), 'Unpublish');
     }
 
-    public function updateCMSFields(FieldList $fields)
+    public function updateCMSFields(FieldList $fields): ?\SilverStripe\Forms\FieldList
     {
         if (Permission::check('CMS_ACCESS_DataChangeAdmin')) {
             //Get all data changes relating to this page filter them by publish/unpublish
             $dataChanges = DataChangeRecord::get()->filter([
-                    'ChangeRecordID' => $this->owner->ID,
-                    'ChangeRecordClass' => $this->owner->ClassName
+                    'ChangeRecordID' => $this->getOwner()->ID,
+                    'ChangeRecordClass' => $this->getOwner()->ClassName
                 ])->exclude('ChangeType', 'Change');
 
             //create a gridfield out of them
@@ -52,5 +52,6 @@ class SiteTreeChangeRecordable extends ChangeRecordable
             $fields->addFieldToTab('Root.PublishedState', $publishedGridField);
             return $fields;
         }
+        return null;
     }
 }

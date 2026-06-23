@@ -26,7 +26,7 @@ class DataChangeTest extends SapphireTest
         TestTrackedUnderscoreChild::class,
     ];
 
-    public function testTrackChange()
+    public function testTrackChange(): void
     {
         $obj = TestTrackedObject::create(['Title' => 'Object title']);
         $obj->write();
@@ -43,12 +43,12 @@ class DataChangeTest extends SapphireTest
 
         $this->assertEquals(2, count($mapped));
 
-        $after = json_decode($mapped[0]->After, true);
+        $after = json_decode((string) $mapped[0]->After, true);
 
         $this->assertEquals('Changed title', $after['Title']);
     }
 
-    public function testManyManyChanges_TableWithNoUnderscores()
+    public function testManyManyChanges_TableWithNoUnderscores(): void
     {
         //
         // Setup data
@@ -107,7 +107,7 @@ class DataChangeTest extends SapphireTest
         $this->assertEquals('Add "kid2 object" to Kids', $mapped[0]->ChangeType);
     }
 
-    public function testAManyManyChanges_TableWithUnderscores()
+    public function testAManyManyChanges_TableWithUnderscores(): void
     {
         //
         // Setup data

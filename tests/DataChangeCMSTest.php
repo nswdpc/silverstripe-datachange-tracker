@@ -15,7 +15,7 @@ class DataChangeCMSTest extends FunctionalTest
         TestTextJSONFieldObject::class,
     ];
 
-    public function testCMSFieldsWithJSONData()
+    public function testCMSFieldsWithJSONData(): void
     {
         // Create test data
         $record = TestTextJSONFieldObject::create();

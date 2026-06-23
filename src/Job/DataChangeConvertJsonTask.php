@@ -25,7 +25,7 @@ class DataChangeConvertJsonTask extends BuildTask
 
     protected function execute(InputInterface $input, PolyOutput $output): int
     {
-        $confirm = $input->getOption('run') ? true : false;
+        $confirm = (bool) $input->getOption('run');
         if ($confirm) {
             try {
                 // load all items and convert 'before' and 'after' to json if their serialize returns a value
@@ -41,8 +41,9 @@ class DataChangeConvertJsonTask extends BuildTask
                         $output->writeln("Updated {$record->Title} (#{$record->ID})");
                     }
                 }
+
                 return Command::SUCCESS;
-            } catch (\Exception $exception) {
+            } catch (\Exception) {
                 $output->writeln("Failed - general exception thrown");
                 return Command::FAILURE;
             }

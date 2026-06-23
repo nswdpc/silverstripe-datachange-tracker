@@ -12,6 +12,7 @@ use SilverStripe\Core\Config\Config;
  *
  * @author  marcus@symbiote.com.au
  * @license BSD License http://silverstripe.org/bsd-license/
+ * @extends \SilverStripe\Core\Extension<static>
  */
 class ChangeRecordable extends Extension
 {
@@ -22,21 +23,16 @@ class ChangeRecordable extends Extension
      */
     public $dataChangeTrackService;
 
-    private static $ignored_fields = [];
+    private static array $ignored_fields = [];
 
     protected $isNewObject = false;
 
     protected $changeType = 'Change';
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     public function onBeforeWrite()
     {
-        if ($this->owner->isInDB()) {
-            $this->dataChangeTrackService->track($this->owner, $this->changeType);
+        if ($this->getOwner()->isInDB()) {
+            $this->dataChangeTrackService->track($this->getOwner(), $this->changeType);
         } else {
             $this->isNewObject = true;
             $this->changeType = 'New';
@@ -46,42 +42,41 @@ class ChangeRecordable extends Extension
     public function onAfterWrite()
     {
         if ($this->isNewObject) {
-            $this->dataChangeTrackService->track($this->owner, $this->changeType);
+            $this->dataChangeTrackService->track($this->getOwner(), $this->changeType);
             $this->isNewObject = false;
         }
     }
 
     public function onBeforeDelete()
     {
-        $this->dataChangeTrackService->track($this->owner, 'Delete');
+        $this->dataChangeTrackService->track($this->getOwner(), 'Delete');
     }
 
-    public function getIgnoredFields()
+    public function getIgnoredFields(): ?array
     {
         $ignored = Config::inst()->get(ChangeRecordable::class, 'ignored_fields');
-        $class = $this->owner->ClassName;
+        $class = $this->getOwner()->ClassName;
         if (isset($ignored[$class])) {
             return array_combine($ignored[$class], $ignored[$class]);
         }
+        return null;
     }
 
-    public function onBeforeVersionedPublish($from, $to)
+    public function onBeforeVersionedPublish(string $from, string $to)
     {
-        if ($this->owner->isInDB()) {
-            $this->dataChangeTrackService->track($this->owner, 'Publish ' . $from . ' to ' . $to);
+        if ($this->getOwner()->isInDB()) {
+            $this->dataChangeTrackService->track($this->getOwner(), 'Publish ' . $from . ' to ' . $to);
         }
     }
 
     /**
      * Get the list of data changes for this item
-     *
-     * @return \SilverStripe\ORM\DataList
      */
-    public function getDataChangesList()
+    public function getDataChangesList(): \SilverStripe\ORM\DataList
     {
         return DataChangeRecord::get()->filter([
-            'ChangeRecordID' => $this->owner->ID,
-            'ChangeRecordClass' => $this->owner->ClassName
+            'ChangeRecordID' => $this->getOwner()->ID,
+            'ChangeRecordClass' => $this->getOwner()->ClassName
         ]);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Symbiote\DataChange\Tests;
 
 use SilverStripe\ORM\DataObject;
@@ -12,9 +14,9 @@ use SilverStripe\Dev\TestOnly;
  */
 class TestTrackedUnderscoreChild extends DataObject implements TestOnly
 {
-    private static $table_name = 'Symbiote_DataChange_Tests_TestTrackedUnderscoreChild';
+    private static string $table_name = 'Symbiote_DataChange_Tests_TestTrackedUnderscoreChild';
 
-    private static $db = [
+    private static array $db = [
         'Title'     => 'Varchar',
     ];
 }

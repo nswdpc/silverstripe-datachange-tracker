@@ -32,7 +32,7 @@ class CleanupDataChangeHistoryTask extends BuildTask
     protected function execute(InputInterface $input, PolyOutput $output): int
     {
         try {
-            $confirm = $input->getOption('run') ? true : false;
+            $confirm = (bool) $input->getOption('run');
             $since = $input->getOption('older');
 
             if (!$since || !is_string($since)) {
@@ -49,11 +49,12 @@ class CleanupDataChangeHistoryTask extends BuildTask
             } else {
                 $output->writeln("Dry run performed, please supply the run=1 parameter to actually execute the deletion!");
             }
+
             return Command::SUCCESS;
         } catch (\RuntimeException $runtimeException) {
             $output->writeln($runtimeException->getMessage());
             return Command::FAILURE;
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             $output->writeln("General exception error");
             return Command::FAILURE;
         }

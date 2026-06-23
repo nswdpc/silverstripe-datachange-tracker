@@ -21,11 +21,28 @@ use SilverStripe\Control\Director;
  *
  * @author  marcus@symbiote.com.au
  * @license BSD License http://silverstripe.org/bsd-license/
+ * @property ?string $ChangeType
+ * @property ?string $ObjectTitle
+ * @property ?string $Before
+ * @property ?string $After
+ * @property ?string $Stage
+ * @property ?string $CurrentEmail
+ * @property ?string $CurrentURL
+ * @property ?string $Referer
+ * @property ?string $RemoteIP
+ * @property ?string $Agent
+ * @property ?string $GetVars
+ * @property ?string $PostVars
+ * @property int $ChangedByID
+ * @property int $ChangeRecordID
+ * @method \SilverStripe\Security\Member ChangedBy()
+ * @method \SilverStripe\ORM\DataObject ChangeRecord()
  */
 class DataChangeRecord extends DataObject
 {
-    private static $table_name = 'DataChangeRecord';
-    private static $db = [
+    private static string $table_name = 'DataChangeRecord';
+
+    private static array $db = [
         'ChangeType' => 'Varchar',
         'ObjectTitle' => 'Varchar(255)',
         'Before' => 'Text',
@@ -39,11 +56,13 @@ class DataChangeRecord extends DataObject
         'GetVars' => 'Text',
         'PostVars' => 'Text',
     ];
-    private static $has_one = [
+
+    private static array $has_one = [
         'ChangedBy' => Member::class,
         'ChangeRecord' => DataObject::class
     ];
-    private static $summary_fields    = [
+
+    private static array $summary_fields    = [
         'ChangeType' => 'Change Type',
         'ChangeRecordClass' => 'Record Class',
         'ChangeRecordID' => 'Record ID',
@@ -51,15 +70,17 @@ class DataChangeRecord extends DataObject
         'ChangedBy.Title' => 'User',
         'Created' => 'Modification Date'
     ];
-    private static $searchable_fields = [
+
+    private static array $searchable_fields = [
         'ChangeType',
         'ObjectTitle',
         'ChangeRecordClass',
         'ChangeRecordID'
     ];
-    private static $default_sort      = 'ID DESC';
 
-    private static $indexes = [
+    private static string $default_sort      = 'ID DESC';
+
+    private static array $indexes = [
         'Created' => true
     ];
 
@@ -69,6 +90,7 @@ class DataChangeRecord extends DataObject
 
     private static array $request_vars_blacklist = ['url', 'SecurityID'];
 
+    #[\Override]
     public function getCMSFields($params = null)
     {
         Requirements::css('symbiote/silverstripe-datachange-tracker: client/css/datachange-tracker.css');
@@ -119,9 +141,11 @@ class DataChangeRecord extends DataObject
                 if (is_object($prop)) {
                     continue;
                 }
+
                 if (is_array($prop)) {
                     $prop = json_encode($prop);
                 }
+
                 $changedFields[] = $readOnly        = \SilverStripe\Forms\ReadonlyField::create(
                     'ChangedField' . $field,
                     $field,
@@ -137,26 +161,17 @@ class DataChangeRecord extends DataObject
                     ->addExtraClass('datachange-field')
             );
         }
-
-        // Flags fields that cannot be rendered with 'forTemplate'. This prevents bugs where
-        // WorkflowService (of AdvancedWorkflow Module) and BlockManager (of Sheadawson/blocks module) get put
-        // into a field and break the page.
-        $fieldsToRemove = [];
         foreach ($fields->dataFields() as $field) {
             $value = $field->getValue();
-            if ($value && is_object($value)) {
-                if ((method_exists($value, 'hasMethod') && !$value->hasMethod('forTemplate')) || !method_exists(
-                    $value,
-                    'forTemplate'
-                )) {
-                    $field->setValue('[Missing ' . $value::class . '::forTemplate]');
-                }
+            if ($value && is_object($value) && (method_exists($value, 'hasMethod') && !$value->hasMethod('forTemplate') || !method_exists(
+                $value,
+                'forTemplate'
+            ))) {
+                $field->setValue('[Missing ' . $value::class . '::forTemplate]');
             }
         }
 
-        $fields = $fields->makeReadonly();
-
-        return $fields;
+        return $fields->makeReadonly();
     }
 
     /**
@@ -214,6 +229,7 @@ class DataChangeRecord extends DataObject
                 if ($field == 'SecurityID') {
                     continue;
                 }
+
                 $before[$field] = $change['before'];
                 $after[$field]  = $change['after'];
             }
@@ -225,6 +241,7 @@ class DataChangeRecord extends DataObject
         } else {
             $this->Before = json_encode($before);
         }
+
         if ($this->After && $this->After !== 'null' && is_array($after)) {
             //merge the new array last to keep it's value as we want the newest version of each field
             $this->After = json_encode(array_replace($after, json_decode($this->After, true)));
@@ -251,7 +268,6 @@ class DataChangeRecord extends DataObject
         }
 
         if (isset($_SERVER['SERVER_NAME'])) {
-            $protocol = 'http';
             $protocol = isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on" ? 'https://' : 'http://';
             $port = $_SERVER['SERVER_PORT'] ?? '80';
 
@@ -273,6 +289,7 @@ class DataChangeRecord extends DataObject
     /**
      * @return boolean
      * */
+    #[\Override]
     public function canDelete($member = null)
     {
         return false;
@@ -281,6 +298,7 @@ class DataChangeRecord extends DataObject
     /**
      * @return string
      * */
+    #[\Override]
     public function getTitle()
     {
         return $this->ChangeRecordClass . ' #' . $this->ChangeRecordID;
@@ -296,6 +314,7 @@ class DataChangeRecord extends DataObject
             if ($user->Email) {
                 $name .= " <$user->Email>";
             }
+
             return $name;
         } else {
             return "";
@@ -322,11 +341,10 @@ class DataChangeRecord extends DataObject
      */
     public static function pruneChangesBefore(DBDatetime $olderThan): int
     {
-        $query = DB::prepared_query(
+        DB::prepared_query(
             'DELETE FROM "DataChangeRecord" WHERE "Created" < ? ORDER BY "Created" ASC',
             [ $olderThan->Format(DBDatetime::ISO_DATETIME) ]
         );
-        $affectedRows = DB::affected_rows();
-        return $affectedRows;
+        return DB::affected_rows();
     }
 }

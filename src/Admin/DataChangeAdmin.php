@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Symbiote\DataChange\Admin;
 
 use SilverStripe\Admin\ModelAdmin;
@@ -11,10 +13,11 @@ use Symbiote\DataChange\Model\DataChangeRecord;
  */
 class DataChangeAdmin extends ModelAdmin
 {
-    private static $managed_models = [
+    private static array $managed_models = [
         DataChangeRecord::class,
     ];
 
-    private static $url_segment = 'datachanges';
-    private static $menu_title = 'Data Changes';
+    private static string $url_segment = 'datachanges';
+
+    private static string $menu_title = 'Data Changes';
 }

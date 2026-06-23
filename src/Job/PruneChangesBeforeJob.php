@@ -29,19 +29,11 @@ class PruneChangesBeforeJob extends AbstractQueuedJob
 
     protected string $priorTo = '-3 months';
 
-    protected int $repeatAfter = 86400;
-
-    public function __construct(string $priorTo = '-3 months', int $repeatAfter = 86400)
+    public function __construct(string $priorTo = '-3 months', protected int $repeatAfter = 86400)
     {
         $pruneBefore = DBDatetime::now();
         $this->priorTo = trim($priorTo);
-        $this->repeatAfter = $repeatAfter;
-        $olderThan = '';
-        if ($this->priorTo !== '') {
-            $this->pruneBefore = $pruneBefore->modify($this->priorTo);
-        } else {
-            $this->pruneBefore = null;
-        }
+        $this->pruneBefore = $this->priorTo !== '' ? $pruneBefore->modify($this->priorTo) : null;
 
     }
 

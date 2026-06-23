@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Symbiote\DataChange\Tests;
 
 use SilverStripe\ORM\DataObject;
@@ -9,13 +11,13 @@ use Symbiote\DataChange\Extension\ChangeRecordable;
 
 class TestTextJSONFieldObject extends DataObject implements TestOnly
 {
-    private static $table_name = 'TestTextJSONFieldObject';
+    private static string $table_name = 'TestTextJSONFieldObject';
 
-    private static $db = [
+    private static array $db = [
         'TextFieldWithJSON'     => DBText::class,
     ];
 
-    private static $extensions = [
+    private static array $extensions = [
         ChangeRecordable::class,
     ];
 
@@ -31,6 +33,7 @@ class TestTextJSONFieldObject extends DataObject implements TestOnly
         if (is_string($value)) {
             $value = json_decode($value, true);
         }
+
         return $value;
     }
 }
