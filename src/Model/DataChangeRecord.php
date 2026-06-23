@@ -125,7 +125,7 @@ class DataChangeRecord extends DataObject
             )->setStartClosed(false)->addExtraClass('datachange-field')
         );
 
-        if (strlen($this->Before) && strlen($this->ChangeRecordClass) && class_exists($this->ChangeRecordClass)) {
+        if (strlen((string) $this->Before) && strlen($this->ChangeRecordClass) && class_exists($this->ChangeRecordClass)) {
             $before = Injector::inst()->create($this->ChangeRecordClass, $this->prepareForDataDifferencer($this->Before), true);
             $after  = Injector::inst()->create($this->ChangeRecordClass, $this->prepareForDataDifferencer($this->After), true);
             $diff   = DataDifferencer::create($before, $after);
@@ -161,6 +161,7 @@ class DataChangeRecord extends DataObject
                     ->addExtraClass('datachange-field')
             );
         }
+
         foreach ($fields->dataFields() as $field) {
             $value = $field->getValue();
             if ($value && is_object($value) && (method_exists($value, 'hasMethod') && !$value->hasMethod('forTemplate') || !method_exists(

@@ -47,11 +47,9 @@ class ChangeRecordable extends Extension
     public function onAfterWrite()
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
-            if ($this->isNewObject) {
-                $this->dataChangeTrackService->track($record, $this->changeType);
-                $this->isNewObject = false;
-            }
+        if ($record instanceof DataObject && $this->isNewObject) {
+            $this->dataChangeTrackService->track($record, $this->changeType);
+            $this->isNewObject = false;
         }
     }
 
@@ -68,11 +66,12 @@ class ChangeRecordable extends Extension
         $record = $this->getOwner();
         if($record instanceof DataObject) {
             $ignored = Config::inst()->get(ChangeRecordable::class, 'ignored_fields');
-            $class = $$record->ClassName;
+            $class = $record->ClassName;
             if (isset($ignored[$class])) {
                 return array_combine($ignored[$class], $ignored[$class]);
             }
         }
+
         return null;
     }
 
