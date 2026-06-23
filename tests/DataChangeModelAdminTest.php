@@ -4,8 +4,9 @@ namespace Symbiote\DataChange\Tests;
 
 use SilverStripe\Dev\FunctionalTest;
 use Symbiote\DataChange\Extension\ChangeRecordable;
+use Symbiote\DataChange\Model\DataChangeRecord;
 
-class DataChangeCMSTest extends FunctionalTest
+class DataChangeModelAdminTest extends FunctionalTest
 {
     protected $usesDatabase = true;
 
@@ -50,7 +51,7 @@ class DataChangeCMSTest extends FunctionalTest
         // View in the CMS.
         $this->logInWithPermission('ADMIN');
         $dataChangeTrackEditID = $dataChangeTrackRecordIds[0];
-        $editLink = 'admin/datachanges/Symbiote-DataChange-Model-DataChangeRecord/EditForm/field/Symbiote-DataChange-Model-DataChangeRecord/item/' . $dataChangeTrackEditID . '/edit';
+        $editLink = DataChangeRecord::get()->byId($dataChangeTrackEditID)->getCMSEditLink();
 
         // NOTE(Jake): 2018-06-25
         //
@@ -64,7 +65,7 @@ class DataChangeCMSTest extends FunctionalTest
         $this->assertEquals(200, $response->getStatusCode());
 
         $body = $response->getBody();
-        $this->assertStringContainsString('Get Vars', $body);
-        $this->assertStringContainsString('Post Vars', $body);
+        $this->assertStringContainsString('Get vars', $body);
+        $this->assertStringContainsString('Post vars', $body);
     }
 }

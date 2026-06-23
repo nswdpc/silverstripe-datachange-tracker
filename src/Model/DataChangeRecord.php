@@ -2,6 +2,7 @@
 
 namespace Symbiote\DataChange\Model;
 
+use SilverStripe\Admin\CMSEditLinkExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBDatetime;
@@ -15,6 +16,7 @@ use SilverStripe\Versioned\DataDifferencer;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Security\Member;
 use SilverStripe\Control\Director;
+use Symbiote\DataChange\Admin\DataChangeAdmin;
 
 /**
  * Record a change to a dataobject; use this to track data changes of objects
@@ -41,6 +43,12 @@ use SilverStripe\Control\Director;
 class DataChangeRecord extends DataObject
 {
     private static string $table_name = 'DataChangeRecord';
+
+    private static string $cms_edit_owner = DataChangeAdmin::class;
+
+    private static $extensions = [
+        CMSEditLinkExtension::class,
+    ];
 
     private static array $db = [
         'ChangeType' => 'Varchar',
@@ -311,12 +319,13 @@ class DataChangeRecord extends DataObject
     public function getMemberDetails(): string
     {
         if ($user = $this->ChangedBy()) {
-            $name = $user->getTitle();
-            if ($user->Email) {
+            $name = $user->getTitle() ?? '';
+            if ($name !== '' && $user->Email) {
                 $name .= " <$user->Email>";
+            } else {
+                $name = $user->Email ?? '';
             }
-
-            return $name;
+            return trim($name);
         } else {
             return "";
         }
