@@ -80,17 +80,19 @@ class DataChangeTest extends SapphireTest
         Injector::inst()->load($newInjectorConfig);
 
         // We want to check that $obj->Kids() is returning the injected TrackedManyManyList, not ManyManyList
+        // @phpstan-ignore method.notFound
         $this->assertEquals(TrackedManyManyList::class, $obj->Kids()::class);
 
         // We want to make sure the join table looks like how we expect.
+        // @phpstan-ignore method.notFound
         $this->assertEquals('TestTrackedObject_Kids', $obj->Kids()->getJoinTable());
 
-        //
         // Test Many many changes
-        //
+        // @phpstan-ignore method.notFound
         $obj->Kids()->add($kid);
         $this->getService()->resetChangeCache();
 
+        // @phpstan-ignore method.notFound
         $obj->Kids()->add($kid2);
         $this->getService()->resetChangeCache();
 
@@ -139,17 +141,20 @@ class DataChangeTest extends SapphireTest
         Injector::inst()->load($newInjectorConfig);
 
         // We want to check that $obj->Kids() is returning the injected TrackedManyManyList, not ManyManyList
+        // @phpstan-ignore method.notFound
         $this->assertEquals(TrackedManyManyList::class, $obj->Kids()::class);
 
         // We want to make sure the join table looks like how we expect.
+        // @phpstan-ignore method.notFound
         $this->assertEquals('Symbiote_DataChange_Tests_TestTrackedUnderscoreObject_Kids', $obj->Kids()->getJoinTable());
 
         //
         // Test Many many changes
-        //
+        // @phpstan-ignore method.notFound
         $obj->Kids()->add($kid);
         $this->getService()->resetChangeCache();
 
+        // @phpstan-ignore method.notFound
         $obj->Kids()->add($kid2);
         $this->getService()->resetChangeCache();
 

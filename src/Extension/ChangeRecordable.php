@@ -6,6 +6,7 @@ use Symbiote\DataChange\Service\DataChangeTrackService;
 use Symbiote\DataChange\Model\DataChangeRecord;
 use SilverStripe\Core\Extension;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\ORM\DataObject;
 
 /**
  * Add to classes you want changes recorded for
@@ -16,66 +17,86 @@ use SilverStripe\Core\Config\Config;
  */
 class ChangeRecordable extends Extension
 {
-    /**
-     *
-     * @var DataChangeTrackService
-     */
-    public $dataChangeTrackService;
+
+    protected ?DataChangeTrackService $dataChangeTrackService = null;
 
     private static array $ignored_fields = [];
 
-    protected $isNewObject = false;
+    protected bool $isNewObject = false;
 
-    protected $changeType = 'Change';
+    protected string $changeType = 'Change';
+
+    public function setDataChangeTrackService(DataChangeTrackService $dataChangeTrackService)
+    {
+        $this->dataChangeTrackService = $dataChangeTrackService;
+    }
 
     public function onBeforeWrite()
     {
-        if ($this->getOwner()->isInDB()) {
-            $this->dataChangeTrackService->track($this->getOwner(), $this->changeType);
-        } else {
-            $this->isNewObject = true;
-            $this->changeType = 'New';
+        $record = $this->getOwner();
+        if($record instanceof DataObject) {
+            if ($record->isInDB()) {
+                $this->dataChangeTrackService->track($record, $this->changeType);
+            } else {
+                $this->isNewObject = true;
+                $this->changeType = 'New';
+            }
         }
     }
 
     public function onAfterWrite()
     {
-        if ($this->isNewObject) {
-            $this->dataChangeTrackService->track($this->getOwner(), $this->changeType);
-            $this->isNewObject = false;
+        $record = $this->getOwner();
+        if($record instanceof DataObject) {
+            if ($this->isNewObject) {
+                $this->dataChangeTrackService->track($record, $this->changeType);
+                $this->isNewObject = false;
+            }
         }
     }
 
     public function onBeforeDelete()
     {
-        $this->dataChangeTrackService->track($this->getOwner(), 'Delete');
+        $record = $this->getOwner();
+        if($record instanceof DataObject) {
+            $this->dataChangeTrackService->track($record, 'Delete');
+        }
     }
 
     public function getIgnoredFields(): ?array
     {
-        $ignored = Config::inst()->get(ChangeRecordable::class, 'ignored_fields');
-        $class = $this->getOwner()->ClassName;
-        if (isset($ignored[$class])) {
-            return array_combine($ignored[$class], $ignored[$class]);
+        $record = $this->getOwner();
+        if($record instanceof DataObject) {
+            $ignored = Config::inst()->get(ChangeRecordable::class, 'ignored_fields');
+            $class = $$record->ClassName;
+            if (isset($ignored[$class])) {
+                return array_combine($ignored[$class], $ignored[$class]);
+            }
         }
         return null;
     }
 
     public function onBeforeVersionedPublish(string $from, string $to)
     {
-        if ($this->getOwner()->isInDB()) {
-            $this->dataChangeTrackService->track($this->getOwner(), 'Publish ' . $from . ' to ' . $to);
+        $record = $this->getOwner();
+        if($record instanceof DataObject && $record->isInDB()) {
+            $this->dataChangeTrackService->track($record, 'Publish ' . $from . ' to ' . $to);
         }
     }
 
     /**
      * Get the list of data changes for this item
      */
-    public function getDataChangesList(): \SilverStripe\ORM\DataList
+    public function getDataChangesList(): ?\SilverStripe\ORM\DataList
     {
-        return DataChangeRecord::get()->filter([
-            'ChangeRecordID' => $this->getOwner()->ID,
-            'ChangeRecordClass' => $this->getOwner()->ClassName
-        ]);
+        $record = $this->getOwner();
+        if($record instanceof DataObject) {
+            return DataChangeRecord::get()->filter([
+                'ChangeRecordID' => $record->ID,
+                'ChangeRecordClass' => $record->ClassName
+            ]);
+        } else {
+            return null;
+        }
     }
 }
