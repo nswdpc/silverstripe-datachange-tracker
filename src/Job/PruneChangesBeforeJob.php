@@ -65,7 +65,7 @@ class PruneChangesBeforeJob extends AbstractQueuedJob
             $next = DBDatetime::now();
             $next = $next->Modify("+{$this->repeatAfter} seconds");
             $repeatTime = static::config()->get('repeat_at_time');
-            if($repeatTime == '') {
+            if ($repeatTime == '') {
                 $repeatTime = "03:00:00";
             }
 
