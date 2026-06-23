@@ -7,14 +7,12 @@ use SilverStripe\Dev\BuildTask;
 use SilverStripe\PolyExecution\PolyOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 
 /**
  * @author marcus
  */
 class DataChangeConvertJsonTask extends BuildTask
 {
-
     private static bool $is_enabled = false;
 
     protected static string $commandName = 'DataChangeConvertJsonTask';

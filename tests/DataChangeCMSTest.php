@@ -3,8 +3,6 @@
 namespace Symbiote\DataChange\Tests;
 
 use SilverStripe\Dev\FunctionalTest;
-use SilverStripe\Control\Controller;
-use Symbiote\DataChange\Admin\DataChangeAdmin;
 use Symbiote\DataChange\Extension\ChangeRecordable;
 
 class DataChangeCMSTest extends FunctionalTest

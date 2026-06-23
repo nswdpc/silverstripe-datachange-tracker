@@ -16,7 +16,6 @@ use SilverStripe\Forms\GridField\GridField;
  */
 class SiteTreeChangeRecordable extends ChangeRecordable
 {
-
     public function onAfterPublish(&$original)
     {
         $this->dataChangeTrackService->track($this->getOwner(), 'Publish');
@@ -32,9 +31,9 @@ class SiteTreeChangeRecordable extends ChangeRecordable
         if (Permission::check('CMS_ACCESS_DataChangeAdmin')) {
             //Get all data changes relating to this page filter them by publish/unpublish
             $dataChanges = DataChangeRecord::get()->filter([
-                    'ChangeRecordID' => $this->getOwner()->ID,
-                    'ChangeRecordClass' => $this->getOwner()->ClassName
-                ])->exclude('ChangeType', 'Change');
+                'ChangeRecordID' => $this->getOwner()->ID,
+                'ChangeRecordClass' => $this->getOwner()->ClassName
+            ])->exclude('ChangeType', 'Change');
 
             //create a gridfield out of them
             $gridFieldConfig = GridFieldConfig_RecordViewer::create();

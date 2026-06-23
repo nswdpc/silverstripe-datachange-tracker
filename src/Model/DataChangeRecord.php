@@ -194,7 +194,7 @@ class DataChangeRecord extends DataObject
         }
 
         $fieldBlacklist = self::config()->get('field_blacklist');
-        if(is_array($fieldBlacklist)) {
+        if (is_array($fieldBlacklist)) {
             foreach ($fieldBlacklist as $key) {
                 if (isset($changes[$key])) {
                     unset($changes[$key]);
@@ -251,7 +251,7 @@ class DataChangeRecord extends DataObject
 
         if (self::config()->get('save_request_vars')) {
             $requestVarsBlacklist = self::config()->get('request_vars_blacklist');
-            if(is_array($requestVarsBlacklist)) {
+            if (is_array($requestVarsBlacklist)) {
                 foreach ($requestVarsBlacklist as $key) {
                     unset($_GET[$key]);
                     unset($_POST[$key]);

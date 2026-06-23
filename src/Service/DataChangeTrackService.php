@@ -3,7 +3,6 @@
 namespace Symbiote\DataChange\Service;
 
 use Symbiote\DataChange\Model\DataChangeRecord;
-
 use SilverStripe\ORM\DataObject;
 
 /**
@@ -11,7 +10,6 @@ use SilverStripe\ORM\DataObject;
  */
 class DataChangeTrackService implements \Stringable
 {
-
     protected $dcr_cache = [];
 
     public $disabled = false;

@@ -3,14 +3,12 @@
 namespace Symbiote\DataChange\Job;
 
 use SilverStripe\Dev\BuildTask;
-use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use Symbiote\DataChange\Model\DataChangeRecord;
 use SilverStripe\PolyExecution\PolyOutput;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 
 /**
  *
@@ -20,7 +18,6 @@ use Symfony\Component\Console\Input\InputOption;
  */
 class CleanupDataChangeHistoryTask extends BuildTask
 {
-
     private static bool $is_enabled = false;
 
     protected static string $commandName = 'CleanupDataChangeHistoryTask';

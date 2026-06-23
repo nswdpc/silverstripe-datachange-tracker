@@ -16,7 +16,6 @@ use SilverStripe\Core\Config\Config;
  */
 class ChangeRecordable extends Extension
 {
-
     /**
      *
      * @var DataChangeTrackService

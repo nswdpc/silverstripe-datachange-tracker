@@ -7,7 +7,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\ORM\ManyManyList;
 use Symbiote\DataChange\Extension\ChangeRecordable;
-use Symbiote\DataChange\Service\DataChangeTrackService;
 use Symbiote\DataChange\Model\TrackedManyManyList;
 
 /**

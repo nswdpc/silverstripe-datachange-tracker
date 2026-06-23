@@ -3,7 +3,6 @@
 namespace Symbiote\DataChange\Extension;
 
 use DateTime;
-
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\ReadonlyField;
@@ -22,7 +21,6 @@ use SilverStripe\Core\Config\Config;
  */
 class SignificantChangeRecordable extends Extension
 {
-
     private static array $ignored_fields = [];
 
     private static array $significant_fields = [];
@@ -83,7 +81,7 @@ class SignificantChangeRecordable extends Extension
                     $this->getOwner()->LastSignificantChange = date(DateTime::ATOM);
                 }
             }
-            
+
             //If we don't have any significant changes leave the field alone as a previous edit may have been
             //significant.
         } elseif ($this->getOwner()->isInDB()) {

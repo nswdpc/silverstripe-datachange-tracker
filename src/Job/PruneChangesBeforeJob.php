@@ -3,15 +3,10 @@
 namespace Symbiote\DataChange\Job;
 
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\Core\Injector\Injector;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Symbiote\DataChange\Model\DataChangeRecord;
-use SilverStripe\PolyExecution\PolyOutput;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 
 if (!class_exists(AbstractQueuedJob::class)) {
     return;
@@ -24,7 +19,6 @@ if (!class_exists(AbstractQueuedJob::class)) {
  */
 class PruneChangesBeforeJob extends AbstractQueuedJob
 {
-
     protected ?DBDatetime $pruneBefore = null;
 
     protected string $priorTo = '-3 months';
@@ -39,7 +33,7 @@ class PruneChangesBeforeJob extends AbstractQueuedJob
 
     public function getTitle()
     {
-        if($this->pruneBefore instanceof DBDatetime) {
+        if ($this->pruneBefore instanceof DBDatetime) {
             return "Prune data change track entries before " . $this->pruneBefore->Format(DBDatetime::ISO_DATETIME);
         } else {
             return "Prune data change track entries - specify a date!";
@@ -48,7 +42,7 @@ class PruneChangesBeforeJob extends AbstractQueuedJob
 
     public function process()
     {
-        if($this->pruneBefore instanceof DBDatetime) {
+        if ($this->pruneBefore instanceof DBDatetime) {
             $this->addMessage("Pruning datachange records before " . $this->pruneBefore->Format(DBDatetime::ISO_DATETIME));
             $affectedRows = DataChangeRecord::pruneChangesBefore($this->pruneBefore);
             $this->addMessage("Pruned {$affectedRows} datachange record(s)");
@@ -60,12 +54,13 @@ class PruneChangesBeforeJob extends AbstractQueuedJob
 
     public function afterComplete()
     {
-        if($this->repeatAfter > 0) {
+        if ($this->repeatAfter > 0) {
             $job = new PruneChangesBeforeJob($this->priorTo, $this->repeatAfter);
             $next = DBDatetime::now();
             $next = $next->Modify("+{$this->repeatAfter} seconds");
             Injector::inst()->get(QueuedJobService::class)->queueJob(
-                $job, $next->Format(DBDatetime::ISO_DATETIME)
+                $job,
+                $next->Format(DBDatetime::ISO_DATETIME)
             );
         }
     }
