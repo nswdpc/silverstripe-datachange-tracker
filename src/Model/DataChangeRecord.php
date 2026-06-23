@@ -39,6 +39,7 @@ use Symbiote\DataChange\Admin\DataChangeAdmin;
  * @property int $ChangeRecordID
  * @method \SilverStripe\Security\Member ChangedBy()
  * @method \SilverStripe\ORM\DataObject ChangeRecord()
+ * @mixin \SilverStripe\Admin\CMSEditLinkExtension
  */
 class DataChangeRecord extends DataObject
 {
@@ -46,7 +47,7 @@ class DataChangeRecord extends DataObject
 
     private static string $cms_edit_owner = DataChangeAdmin::class;
 
-    private static $extensions = [
+    private static array $extensions = [
         CMSEditLinkExtension::class,
     ];
 
@@ -325,6 +326,7 @@ class DataChangeRecord extends DataObject
             } else {
                 $name = $user->Email ?? '';
             }
+
             return trim($name);
         } else {
             return "";

@@ -68,6 +68,7 @@ class PruneChangesBeforeJob extends AbstractQueuedJob
             if($repeatTime == '') {
                 $repeatTime = "03:00:00";
             }
+
             Injector::inst()->get(QueuedJobService::class)->queueJob(
                 $job,
                 $next->Format(DBDate::ISO_DATE . " " . $repeatTime)
