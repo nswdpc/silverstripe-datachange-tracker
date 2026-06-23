@@ -2,11 +2,16 @@
 
 namespace Symbiote\DataChange\Job;
 
-use SilverStripe\ORM\Queries\SQLDelete;
+use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\Core\Injector\Injector;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Symbiote\DataChange\Model\DataChangeRecord;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 if (!class_exists(AbstractQueuedJob::class)) {
     return;
@@ -20,52 +25,56 @@ if (!class_exists(AbstractQueuedJob::class)) {
 class PruneChangesBeforeJob extends AbstractQueuedJob
 {
 
-    public function __construct($priorTo = null)
-    {
-        $ts = 0;
-        if ($priorTo) {
-            $ts = strtotime((string) $priorTo);
-        }
-        if ($ts <= 0) {
-            $ts = time() - 90 * 86400;
-        }
-        $this->priorTo = $priorTo;
-        $this->pruneBefore = date('Y-m-d 00:00:00', $ts);
-            // NOTE(Jake): 2018-05-08
-            //
-            // Change steps to 1 as it's technically doing
-            // this in 1 step now, this is to avoid an issue where
-            // totalSteps=0 can occur and the job won't requeue itself.
-            // (When using ->count() off the DataList)
-            //
-        $this->totalSteps = 1;
-    }
+    protected ?DBDatetime $pruneBefore = null;
 
-    public function getSignature()
+    protected string $priorTo = '-3 months';
+
+    protected int $repeatAfter = 86400;
+
+    public function __construct(string $priorTo = '-3 months', int $repeatAfter = 86400)
     {
-        return md5($this->pruneBefore);
+        $pruneBefore = DBDatetime::now();
+        $this->priorTo = trim($priorTo);
+        $this->repeatAfter = $repeatAfter;
+        $olderThan = '';
+        if ($this->priorTo !== '') {
+            $this->pruneBefore = $pruneBefore->modify($this->priorTo);
+        } else {
+            $this->pruneBefore = null;
+        }
+
     }
 
     public function getTitle()
     {
-        return "Prune data change track entries before " . $this->pruneBefore;
+        if($this->pruneBefore instanceof DBDatetime) {
+            return "Prune data change track entries before " . $this->pruneBefore->Format(DBDatetime::ISO_DATETIME);
+        } else {
+            return "Prune data change track entries - specify a date!";
+        }
     }
 
     public function process()
     {
-        $items = DataChangeRecord::get()->filter('Created:LessThan', $this->pruneBefore);
-        $max = $items->max('ID');
+        if($this->pruneBefore instanceof DBDatetime) {
+            $this->addMessage("Pruning datachange records before " . $this->pruneBefore->Format(DBDatetime::ISO_DATETIME));
+            $affectedRows = DataChangeRecord::pruneChangesBefore($this->pruneBefore);
+            $this->addMessage("Pruned {$affectedRows} datachange record(s)");
+            $this->isComplete = true;
+        } else {
+            throw new \RuntimeException("Specify a valid first argument to the job as a value strotime() can parse");
+        }
+    }
 
-        $query = new SQLDelete('DataChangeRecord', '"ID" < \'' . $max . '\'');
-        $query->execute();
-
-        $job = new PruneChangesBeforeJob($this->priorTo);
-
-        $next = date('Y-m-d 03:00:00', strtotime('tomorrow'));
-
-        $this->currentStep = 1;
-        $this->isComplete = true;
-
-        Injector::inst()->get(QueuedJobService::class)->queueJob($job, $next);
+    public function afterComplete()
+    {
+        if($this->repeatAfter > 0) {
+            $job = new PruneChangesBeforeJob($this->priorTo, $this->repeatAfter);
+            $next = DBDatetime::now();
+            $next = $next->Modify("+{$this->repeatAfter} seconds");
+            Injector::inst()->get(QueuedJobService::class)->queueJob(
+                $job, $next->Format(DBDatetime::ISO_DATETIME)
+            );
+        }
     }
 }

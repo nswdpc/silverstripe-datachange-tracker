@@ -4,7 +4,7 @@ namespace Symbiote\DataChange\Extension;
 
 use Symbiote\DataChange\Service\DataChangeTrackService;
 use Symbiote\DataChange\Model\DataChangeRecord;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\Core\Config\Config;
 
 /**
@@ -13,7 +13,7 @@ use SilverStripe\Core\Config\Config;
  * @author  marcus@symbiote.com.au
  * @license BSD License http://silverstripe.org/bsd-license/
  */
-class ChangeRecordable extends DataExtension
+class ChangeRecordable extends Extension
 {
 
     /**
@@ -35,7 +35,6 @@ class ChangeRecordable extends DataExtension
 
     public function onBeforeWrite()
     {
-        parent::onBeforeWrite();
         if ($this->owner->isInDB()) {
             $this->dataChangeTrackService->track($this->owner, $this->changeType);
         } else {
@@ -46,7 +45,6 @@ class ChangeRecordable extends DataExtension
 
     public function onAfterWrite()
     {
-        parent::onAfterWrite();
         if ($this->isNewObject) {
             $this->dataChangeTrackService->track($this->owner, $this->changeType);
             $this->isNewObject = false;
@@ -55,7 +53,6 @@ class ChangeRecordable extends DataExtension
 
     public function onBeforeDelete()
     {
-        parent::onBeforeDelete();
         $this->dataChangeTrackService->track($this->owner, 'Delete');
     }
 

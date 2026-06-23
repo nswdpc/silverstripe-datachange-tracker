@@ -3,6 +3,8 @@
 namespace Symbiote\DataChange\Model;
 
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\Security;
 use SilverStripe\View\Requirements;
 use SilverStripe\Forms\FieldList;
@@ -57,14 +59,15 @@ class DataChangeRecord extends DataObject
     ];
     private static $default_sort      = 'ID DESC';
 
-    /**
-     * Should request variables be saved too?
-     *
-     * @var boolean
-     */
-    private static $save_request_vars      = false;
-    private static $field_blacklist        = ['Password'];
-    private static $request_vars_blacklist = ['url', 'SecurityID'];
+    private static $indexes = [
+        'Created' => true
+    ];
+
+    private static bool $save_request_vars      = false;
+
+    private static array $field_blacklist        = ['Password'];
+
+    private static array $request_vars_blacklist = ['url', 'SecurityID'];
 
     public function getCMSFields($params = null)
     {
@@ -140,7 +143,7 @@ class DataChangeRecord extends DataObject
         // into a field and break the page.
         $fieldsToRemove = [];
         foreach ($fields->dataFields() as $field) {
-            $value = $field->Value();
+            $value = $field->getValue();
             if ($value && is_object($value)) {
                 if ((method_exists($value, 'hasMethod') && !$value->hasMethod('forTemplate')) || !method_exists(
                     $value,
@@ -158,10 +161,8 @@ class DataChangeRecord extends DataObject
 
     /**
      * Track a change to a DataObject
-     *
-     * @return DataChangeRecord
      * */
-    public function track(DataObject $changedObject, $type = 'Change')
+    public function track(DataObject $changedObject, $type = 'Change'): ?self
     {
         $changes = $changedObject->getChangedFields(true, 2);
         if (count($changes)) {
@@ -177,14 +178,17 @@ class DataChangeRecord extends DataObject
             }
         }
 
-        foreach (self::config()->field_blacklist as $key) {
-            if (isset($changes[$key])) {
-                unset($changes[$key]);
+        $fieldBlacklist = self::config()->get('field_blacklist');
+        if(is_array($fieldBlacklist)) {
+            foreach ($fieldBlacklist as $key) {
+                if (isset($changes[$key])) {
+                    unset($changes[$key]);
+                }
             }
         }
 
         if ((empty($changes) && $type == 'Change')) {
-            return;
+            return null;
         }
 
         if ($type === 'Delete' && Versioned::get_reading_mode() === 'Stage.Live') {
@@ -228,14 +232,17 @@ class DataChangeRecord extends DataObject
             $this->After = json_encode($after);
         }
 
-        if (self::config()->save_request_vars) {
-            foreach (self::config()->request_vars_blacklist as $key) {
-                unset($_GET[$key]);
-                unset($_POST[$key]);
+        if (self::config()->get('save_request_vars')) {
+            $requestVarsBlacklist = self::config()->get('request_vars_blacklist');
+            if(is_array($requestVarsBlacklist)) {
+                foreach ($requestVarsBlacklist as $key) {
+                    unset($_GET[$key]);
+                    unset($_POST[$key]);
+                }
             }
 
-            $this->GetVars  = isset($_GET) ? json_encode($_GET) : null;
-            $this->PostVars = isset($_POST) ? json_encode($_POST) : null;
+            $this->GetVars  = json_encode($_GET);
+            $this->PostVars = json_encode($_POST);
         }
 
         if ($member = Security::getCurrentUser()) {
@@ -281,10 +288,8 @@ class DataChangeRecord extends DataObject
 
     /**
      * Return a description/summary of the user
-     *
-     * @return string
      * */
-    public function getMemberDetails()
+    public function getMemberDetails(): string
     {
         if ($user = $this->ChangedBy()) {
             $name = $user->getTitle();
@@ -292,6 +297,8 @@ class DataChangeRecord extends DataObject
                 $name .= " <$user->Email>";
             }
             return $name;
+        } else {
+            return "";
         }
     }
 
@@ -308,5 +315,18 @@ class DataChangeRecord extends DataObject
         //
         $resultJsonData = json_decode((string) $jsonData, true, 1);
         return $resultJsonData;
+    }
+
+    /**
+     * Helper method to prune older records
+     */
+    public static function pruneChangesBefore(DBDatetime $olderThan): int
+    {
+        $query = DB::prepared_query(
+            'DELETE FROM "DataChangeRecord" WHERE "Created" < ? ORDER BY "Created" ASC',
+            [ $olderThan->Format(DBDatetime::ISO_DATETIME) ]
+        );
+        $affectedRows = DB::affected_rows();
+        return $affectedRows;
     }
 }

@@ -6,6 +6,7 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\ORM\ManyManyList;
+use Symbiote\DataChange\Extension\ChangeRecordable;
 use Symbiote\DataChange\Service\DataChangeTrackService;
 use Symbiote\DataChange\Model\TrackedManyManyList;
 
@@ -35,6 +36,7 @@ class DataChangeTest extends SapphireTest
         $obj->Title = 'Changed title';
         $obj->write();
 
+        $this->assertTrue($obj->hasExtension(ChangeRecordable::class));
         $changes = $obj->getDataChangesList();
 
         $mapped = $changes->toArray();
@@ -93,6 +95,7 @@ class DataChangeTest extends SapphireTest
         $obj->Kids()->add($kid2);
         $this->getService()->resetChangeCache();
 
+        $this->assertTrue($obj->hasExtension(ChangeRecordable::class));
         $changes = $obj->getDataChangesList();
 
         $mapped = $changes->toArray();
@@ -151,6 +154,7 @@ class DataChangeTest extends SapphireTest
         $obj->Kids()->add($kid2);
         $this->getService()->resetChangeCache();
 
+        $this->assertTrue($obj->hasExtension(ChangeRecordable::class));
         $changes = $obj->getDataChangesList();
 
         $mapped = $changes->toArray();

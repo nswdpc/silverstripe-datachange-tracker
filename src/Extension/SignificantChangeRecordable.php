@@ -4,9 +4,9 @@ namespace Symbiote\DataChange\Extension;
 
 use DateTime;
 
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Core\Config\Config;
@@ -17,7 +17,7 @@ use SilverStripe\Core\Config\Config;
  * @author  stephen@symbiote.com.au
  * @license BSD License http://silverstripe.org/bsd-license/
  */
-class SignificantChangeRecordable extends DataExtension
+class SignificantChangeRecordable extends Extension
 {
 
     private static $ignored_fields = [];
@@ -34,41 +34,39 @@ class SignificantChangeRecordable extends DataExtension
         $fields->removeByName('LastSignificantChange');
         $fields->removeByName('ChangeDescription');
         if ($this->owner->LastSignificantChange !== null) {
-            $dateTime = new DateTime($this->owner->LastSignificantChange);
+            $dateTime = $this->owner->dbObject('LastSignificantChange');
             //Put these fields on the top of the First Tab's form
-            $fields->first()->Tabs()->first()->getChildren()->unshift(
-                LiteralField::create(
-                    "infoLastSignificantChange",
-                    "<strong>Last Significant change was at: "
-                    . "{$dateTime->Format('d/m/Y H:i')}</strong>"
-                )->setAllowHTML(true)
-            );
-            $fields->insertAfter(
-                CheckboxField::create(
-                    "isSignificantChange",
-                    "CLEAR Last Significant change: {$dateTime->Format('d/m/Y H:i')}"
-                )->setDescription(
-                    'Check and save this Record again to clear the Last Significant change date.'
-                )->setValue(false),
-                'infoLastSignificantChange'
-            );
-            $fields->insertAfter(
-                TextField::create('ChangeDescription', 'Description of Changes')
-                ->setDescription('This is an automatically generated list of changes to important fields.'),
-                'isSignificantChange'
+            $fields->addFieldsToTab(
+                'Root.SignificantChanges',
+                [
+                    ReadonlyField::create(
+                        "InfoLastSignificantChange",
+                        "Last Significant change was at: " . $dateTime->Nice()
+                    ),
+                    CheckboxField::create(
+                        "ClearSignificantChange",
+                        "Clear the last significant change"
+                    )->setDescription(
+                        'Check and save this Record again to clear the Last Significant change date.'
+                    )->setValue(false),
+                    TextField::create(
+                        'ChangeDescription',
+                        'Description of changes'
+                    )->setDescription(
+                        'This is an automatically generated list of changes to important fields.'
+                    )
+                ]
             );
         }
     }
 
     public function onBeforeWrite()
     {
-        parent::onBeforeWrite();
         // Load the significant_fields and check to see if they have changed if they have record the current DateTime
         $significant = Config::inst()->get($this->owner->Classname, 'significant_fields');
+        $isSignificantChange = $this->owner->ClearSignificantChange;
 
-        $isSignicantChange = $this->owner->isSignificantChange;
-
-        if (isset($significant) && !$isSignicantChange) {
+        if (isset($significant) && !$isSignificantChange) {
             $significant = array_combine($significant, $significant);
 
             //If the owner object or an extension of it implements getSignificantChange call it instead of testing here

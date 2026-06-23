@@ -14,11 +14,10 @@ class TrackedManyManyList extends ManyManyList
 {
     public $trackedRelationships = [];
 
-    public function add($item, $extraFields = [])
+    public function add(mixed $item, array $extraFields = []): void
     {
         $this->recordManyManyChange(__FUNCTION__, $item);
-        $result = parent::add($item, $extraFields);
-        return $result;
+        parent::add($item, $extraFields);
     }
 
     public function remove($item)

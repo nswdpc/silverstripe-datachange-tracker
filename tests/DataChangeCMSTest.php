@@ -5,6 +5,7 @@ namespace Symbiote\DataChange\Tests;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Control\Controller;
 use Symbiote\DataChange\Admin\DataChangeAdmin;
+use Symbiote\DataChange\Extension\ChangeRecordable;
 
 class DataChangeCMSTest extends FunctionalTest
 {
@@ -17,7 +18,7 @@ class DataChangeCMSTest extends FunctionalTest
     public function testCMSFieldsWithJSONData()
     {
         // Create test data
-        $record = new TestTextJSONFieldObject();
+        $record = TestTextJSONFieldObject::create();
         $record->TextFieldWithJSON = json_encode([
             'The Pixies' => [
                 'Bossanova' => [
@@ -44,6 +45,7 @@ class DataChangeCMSTest extends FunctionalTest
         $record->write();
 
         // Get the data change tracker record that was written in 'TestTextJSONFieldObject's onAfterWrite()
+        $this->assertTrue($record->hasExtension(ChangeRecordable::class));
         $dataChangeTrackRecordIds = $record->getDataChangesList()->column('ID');
         $this->assertEquals(2, count($dataChangeTrackRecordIds));
 
@@ -64,13 +66,7 @@ class DataChangeCMSTest extends FunctionalTest
         $this->assertEquals(200, $response->getStatusCode());
 
         $body = $response->getBody();
-        $this->assertTrue(
-            true,
-            str_contains($body, 'Get Vars')
-        );
-        $this->assertTrue(
-            true,
-            str_contains($body, 'Post Vars')
-        );
+        $this->assertStringContainsString('Get Vars', $body);
+        $this->assertStringContainsString('Post Vars', $body);
     }
 }
