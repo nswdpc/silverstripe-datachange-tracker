@@ -68,7 +68,7 @@ class SignificantChangeRecordable extends Extension
     {
 
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
+        if ($record instanceof DataObject) {
             // Load the significant_fields and check to see if they have changed if they have record the current DateTime
             $significant = Config::inst()->get($record->Classname, 'significant_fields');
             $isSignificantChange = $record->ClearSignificantChange;

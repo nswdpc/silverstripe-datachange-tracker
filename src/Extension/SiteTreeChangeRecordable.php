@@ -3,7 +3,6 @@
 namespace Symbiote\DataChange\Extension;
 
 use Symbiote\DataChange\Model\DataChangeRecord;
-use Symbiote\DataChange\Service\DataChangeTrackService;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordViewer;
@@ -18,11 +17,10 @@ use SilverStripe\ORM\DataObject;
  */
 class SiteTreeChangeRecordable extends ChangeRecordable
 {
-
     public function onAfterPublish(&$original)
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
+        if ($record instanceof DataObject) {
             $this->dataChangeTrackService->track($record, 'Publish');
         }
     }
@@ -30,7 +28,7 @@ class SiteTreeChangeRecordable extends ChangeRecordable
     public function onAfterUnpublish()
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
+        if ($record instanceof DataObject) {
             $this->dataChangeTrackService->track($record, 'Unpublish');
         }
     }

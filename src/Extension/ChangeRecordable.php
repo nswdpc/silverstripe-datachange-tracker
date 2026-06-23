@@ -17,7 +17,6 @@ use SilverStripe\ORM\DataObject;
  */
 class ChangeRecordable extends Extension
 {
-
     protected ?DataChangeTrackService $dataChangeTrackService = null;
 
     private static array $ignored_fields = [];
@@ -34,7 +33,7 @@ class ChangeRecordable extends Extension
     public function onBeforeWrite()
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
+        if ($record instanceof DataObject) {
             if ($record->isInDB()) {
                 $this->dataChangeTrackService->track($record, $this->changeType);
             } else {
@@ -56,7 +55,7 @@ class ChangeRecordable extends Extension
     public function onBeforeDelete()
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
+        if ($record instanceof DataObject) {
             $this->dataChangeTrackService->track($record, 'Delete');
         }
     }
@@ -64,7 +63,7 @@ class ChangeRecordable extends Extension
     public function getIgnoredFields(): ?array
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
+        if ($record instanceof DataObject) {
             $ignored = Config::inst()->get(ChangeRecordable::class, 'ignored_fields');
             $class = $record->ClassName;
             if (isset($ignored[$class])) {
@@ -78,7 +77,7 @@ class ChangeRecordable extends Extension
     public function onBeforeVersionedPublish(string $from, string $to)
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject && $record->isInDB()) {
+        if ($record instanceof DataObject && $record->isInDB()) {
             $this->dataChangeTrackService->track($record, 'Publish ' . $from . ' to ' . $to);
         }
     }
@@ -89,7 +88,7 @@ class ChangeRecordable extends Extension
     public function getDataChangesList(): ?\SilverStripe\ORM\DataList
     {
         $record = $this->getOwner();
-        if($record instanceof DataObject) {
+        if ($record instanceof DataObject) {
             return DataChangeRecord::get()->filter([
                 'ChangeRecordID' => $record->ID,
                 'ChangeRecordClass' => $record->ClassName
