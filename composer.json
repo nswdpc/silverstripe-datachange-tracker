@@ -10,7 +10,6 @@
             "email": "marcus@symbiote.com.au"
         }
     ],
-
     "require": {
         "silverstripe/framework": "^6"
     },
@@ -23,7 +22,11 @@
         "phpstan/phpstan": "^2",
         "phpstan/phpstan-phpunit": "^2",
         "rector/rector": "^2",
-        "silverstripe/userforms": "^7.1"
+        "silverstripe/userforms": "^7.1",
+        "symbiote/silverstripe-queuedjobs": "^6"
+    },
+    "suggest": {
+        "symbiote/silverstripe-queuedjobs": "Queued job support"
     },
     "scripts": {
         "phpstan-analyse": "./vendor/bin/phpstan analyse --ansi --no-progress --no-interaction --configuration vendor/nswdpc/ci-files/phpstan/.phpstan.silverstripe.neon src/ tests/",
